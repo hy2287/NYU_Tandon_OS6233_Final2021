@@ -3,34 +3,46 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-char buf[512];
+#define BLOCKSIZE 1024
 
-void cat(int fd) {
-  int n;
+char buf[BLOCKSIZE];
 
-  while ((n = read(fd, buf, sizeof(buf))) > 0)
-    write(1, buf, n);
-  if (n < 0) {
-    printf("cat: read error\n");
-    return;
-  }
+void copy(int fdR, int fdW) {
+    int n;
+
+    while ((n = read(fdR, buf, BLOCKSIZE)) > 0)
+        write(fdW, buf, n);
+    if (n < 0) {
+        printf("copy: read error\n");
+        exit(0);
+    }
 }
 
 int main(int argc, char *argv[]) {
-  int fd, i;
+    int fdR, fdW, i;
 
-  if (argc <= 1) {
-    cat(0);
-    return 0;
+    fdR = open(argv[1], 0);
+    fdW = open(argv[2], O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO | S_IRWXG | S_IRWXU);
+
+    copy(fdR, fdW);
+    close(fdR);
+    close(fdW);
+
+  /*if (argc <= 1) {
+    copy(0, 1);
+    exit(0);
   }
 
   for (i = 1; i < argc; i++) {
-    if ((fd = open(argv[i], 0)) < 0) {
+    if ((fdR = open(argv[i], 0)) < 0) {
       printf("cat: cannot open %s\n", argv[i]);
-      return 0;
+      exit(0);
     }
-    cat(fd);
-    close(fd);
-  }
-  return 0;
+    fdW = open(argv[++i], O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO | S_IRWXG | S_IRWXU);
+    copy(fdR, fdW);
+    close(fdR);
+    close(fdW);
+  }*/
+
+    exit(0);
 }
