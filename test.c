@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <stdlib.h>
+#include <time.h>
 
 #define BLOCKSIZE 1024
 
@@ -18,31 +20,57 @@ void copy(int fdR, int fdW) {
     }
 }
 
-int main(int argc, char *argv[]) {
-    int fdR, fdW, i;
-
-    fdR = open(argv[1], 0);
-    fdW = open(argv[2], O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO | S_IRWXG | S_IRWXU);
-
-    copy(fdR, fdW);
-    close(fdR);
-    close(fdW);
-
-  /*if (argc <= 1) {
-    copy(0, 1);
-    exit(0);
-  }
-
-  for (i = 1; i < argc; i++) {
-    if ((fdR = open(argv[i], 0)) < 0) {
-      printf("cat: cannot open %s\n", argv[i]);
-      exit(0);
+void myWrite(int fd, int blockSize, int blockCount) {
+    char* buffer;
+    buffer = (char*) malloc(blockSize);
+    for (int i = 0; i < blockSize; i++) {
+        buffer[i] = (rand() % 26) + 'a';
     }
-    fdW = open(argv[++i], O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO | S_IRWXG | S_IRWXU);
-    copy(fdR, fdW);
-    close(fdR);
-    close(fdW);
-  }*/
+    for (int i = 0; i < blockCount; i++) {
+      write(fd, buffer, blockSize);
+    }
+    free(buffer);
+    return;
+}
+
+unsigned int myRead(int fd, int blockSize) {
+    int* buffer;
+    unsigned int result = 0;
+    buffer = (int*) malloc(blockSize);
+    while (read(fd, buffer, blockSize) > 0) {
+        for (int i = 0; i < blockSize / 4; i++) {
+            //printf("buffer[i] is %d\n", buffer[i]);
+            result ^= buffer[i];
+        }
+    }
+    free(buffer);
+    return result;
+}
+
+int main(int argc, char *argv[]) {
+    int fd, blockSize, blockCount;
+    char mode;
+    unsigned int xorAnswer = 0;
+
+    sscanf (argv[2],"-%c", &mode);
+    sscanf (argv[3],"%d", &blockSize);
+    sscanf (argv[4],"%d", &blockCount);
+
+    srand((unsigned int) time (NULL));
+
+    if (mode == 'w' || mode == 'W') {
+        fd = open(argv[1], O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO | S_IRWXG | S_IRWXU);
+        myWrite(fd, blockSize, blockCount);
+    }
+    else {
+        fd = open(argv[1], O_RDONLY);
+        xorAnswer = myRead(fd, blockSize);
+    }
+
+    close(fd);
+    if (mode == 'r' || mode == 'R') {
+      printf("XOR Answer is %d", xorAnswer);
+    }
 
     exit(0);
 }
