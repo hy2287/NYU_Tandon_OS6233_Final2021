@@ -32,7 +32,7 @@ unsigned int myRead(int fd, int blockSize) {
     return result;
 }
 
-int findFileSize(int blockSize){
+double findFileSize(int blockSize){
     int blockCount = 1;
     clock_t start, end;
     double timeNeeded = 0;
@@ -40,6 +40,7 @@ int findFileSize(int blockSize){
     int fd;
 
     while(timeNeeded<5){
+        blockCount*=2;
         fd = open(filename, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO | S_IRWXG | S_IRWXU);
         myWrite(fd,blockSize*blockCount,1);
         close(fd);
@@ -53,7 +54,6 @@ int findFileSize(int blockSize){
         printf("block size: %d, block count: %d, time: %fs\n", blockSize, blockCount, timeNeeded);
 
         close(fd);
-        blockCount*=2;
     }
 
     remove(filename);
@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
         close(fd);
     }
     else {
-        findFileSize(100);
+        findFileSize(20);
     }
 
     exit(0);
