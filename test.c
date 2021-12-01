@@ -62,6 +62,27 @@ double findFileSize(int blockSize){
     return blockSize*blockCount;
 }
 
+double getPerformance(int blockSize){
+    //return the MiB/s of the read operation by the specified block size
+    double desiredFileSize = findFileSize(blockSize);
+    int blockCount = (int) desiredFileSize/blockSize;
+    char* filename = "tempfile_performance";
+    int fd = open(filename, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO | S_IRWXG | S_IRWXU);
+    myWrite(fd,blockSize*blockCount,1,0);
+    close(fd);
+
+    fd = open(filename, O_RDONLY);
+
+    clock_t start, end;
+    start=clock();
+    myRead(fd,blockSize);
+    end=clock();
+    double timeNeeded = ((double) (end-start)) / CLOCKS_PER_SEC;
+    double MiBPerSec = desiredFileSize/(1024*1024*timeNeeded);
+    remove(filename);
+    return MiBPerSec;
+}
+
 int main(int argc, char *argv[]) {
     int fd, blockSize, blockCount, testBlockSize;
     char mode = 'x';
@@ -94,6 +115,9 @@ int main(int argc, char *argv[]) {
         findFileSize(testBlockSize);
     }
     else{
+        printf("blocksize: %d, performance: %f MiB/s\n", 1, getPerformance(1));
+        printf("blocksize: %d, performance: %f MiB/s\n", 10, getPerformance(10));
+        printf("blocksize: %d, performance: %f MiB/s\n", 100, getPerformance(100));
         printf("Invalid arg provided\n.");
     }
     exit(0);
