@@ -5,21 +5,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define BLOCKSIZE 1024
-
-char buf[BLOCKSIZE];
-
-void copy(int fdR, int fdW) {
-    int n;
-
-    while ((n = read(fdR, buf, BLOCKSIZE)) > 0)
-        write(fdW, buf, n);
-    if (n < 0) {
-        printf("copy: read error\n");
-        exit(0);
-    }
-}
-
 void myWrite(int fd, int blockSize, int blockCount) {
     char* buffer;
     buffer = (char*) malloc(blockSize);
@@ -56,7 +41,7 @@ int main(int argc, char *argv[]) {
     sscanf (argv[3],"%d", &blockSize);
     sscanf (argv[4],"%d", &blockCount);
 
-    srand((unsigned int) time (NULL));
+    srand(time(0));
 
     if (mode == 'w' || mode == 'W') {
         fd = open(argv[1], O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO | S_IRWXG | S_IRWXU);
