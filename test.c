@@ -39,9 +39,9 @@ int findFileSize(int blockSize){
     char* filename = "tempfile";
     int fd;
 
-    while(timeNeeded<0.0000001){
+    while(timeNeeded<5){
         fd = open(filename, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO | S_IRWXG | S_IRWXU);
-        myWrite(fd,blockSize,blockCount);
+        myWrite(fd,blockSize*blockCount,1);
         close(fd);
 
         fd = open(filename, O_RDONLY);
@@ -50,16 +50,19 @@ int findFileSize(int blockSize){
         end=clock();
         timeNeeded = ((double) (end-start)) / CLOCKS_PER_SEC;
 
-        printf("Block count = %d, time: %fs", blockCount, timeNeeded);
+        printf("block size: %d, block count: %d, time: %fs\n", blockSize, blockCount, timeNeeded);
 
         close(fd);
+        blockCount*=2;
     }
+
+    remove(filename);
     return blockSize*blockCount;
 }
 
 int main(int argc, char *argv[]) {
     int fd, blockSize, blockCount;
-    char mode;
+    char mode = 'x';
     unsigned int xorAnswer = 0;
 
     sscanf (argv[2],"-%c", &mode);
@@ -71,15 +74,16 @@ int main(int argc, char *argv[]) {
     if (mode == 'w' || mode == 'W') {
         fd = open(argv[1], O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO | S_IRWXG | S_IRWXU);
         myWrite(fd, blockSize, blockCount);
+        close(fd);
     }
-    else {
+    else if (mode == 'r' || mode == 'R'){
         fd = open(argv[1], O_RDONLY);
         xorAnswer = myRead(fd, blockSize);
+        printf("XOR Answer is %d", xorAnswer);
+        close(fd);
     }
-
-    close(fd);
-    if (mode == 'r' || mode == 'R') {
-      printf("XOR Answer is %d", xorAnswer);
+    else {
+        findFileSize(100);
     }
 
     exit(0);
