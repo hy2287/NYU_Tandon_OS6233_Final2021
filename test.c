@@ -8,11 +8,11 @@
 void myWrite(int fd, int blockSize, int blockCount) {
     char* buffer;
     buffer = (char*) malloc(blockSize);
-    for (int i = 0; i < blockSize; i++) {
-        buffer[i] = (rand() % 26) + 'a';
-    }
     for (int i = 0; i < blockCount; i++) {
-      write(fd, buffer, blockSize);
+        for (int i = 0; i < blockSize; i++) {
+            buffer[i] = (rand() % 26) + 'a';
+        }
+        write(fd, buffer, blockSize);
     }
     free(buffer);
     return;
