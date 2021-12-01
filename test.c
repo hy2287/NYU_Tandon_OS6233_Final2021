@@ -4,6 +4,8 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 
 void myWrite(int fd, size_t blockSize, size_t blockCount, int randomized) {
     char* buffer;
@@ -38,6 +40,40 @@ unsigned int myRead(int fd, size_t blockSize) {
         }
         for (int i = 0; i < blockSize / 4; i++) {
             // printf("buffer[i] is %d\n", buffer[i]);
+            result ^= buffer[i];
+        }
+    }
+    free(buffer);
+    return result;
+}
+
+unsigned int optimizedRead(char* filename, size_t blockSize) {
+
+    int fd = open(filename, O_RDONLY | __O_LARGEFILE);
+
+    struct stat fileStat;
+    fstat(fd, &fileStat);
+    mmap(NULL, fileStat.st_size, PROT_READ, MAP_SHARED, fd, 0);
+
+    if(posix_fadvise(fd, 0, 0, POSIX_FADV_SEQUENTIAL)<0){
+        printf("fadvice error");
+        return 0;
+    }
+
+    int* buffer;
+    unsigned int result = 0;
+    buffer = (int*) malloc(blockSize);
+    while (1) {
+        ssize_t byteRead = read(fd, buffer, blockSize);
+        if(byteRead==0){
+            break;
+        }
+        else if(byteRead<0){
+            printf("Read error encountered!\n");
+            break;
+        }
+        for (int i = 0; i < blockSize / 4; i++) {
+            //printf("buffer[i] is %d\n", buffer[i]);
             result ^= buffer[i];
         }
     }
@@ -149,6 +185,12 @@ int main(int argc, char *argv[]) {
         fd = open(argv[1], O_RDONLY);
         xorAnswer = myRead(fd, blockSize);
         printf("XOR Answer is %d\n", xorAnswer);
+        close(fd);
+    }
+    else if (mode == 'o'){
+        //optimized read
+        xorAnswer = optimizedRead(argv[1], blockSize);
+        printf("Optimized read: XOR Answer is %d\n", xorAnswer);
         close(fd);
     }
     else if (argc==2){
