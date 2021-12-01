@@ -32,6 +32,31 @@ unsigned int myRead(int fd, int blockSize) {
     return result;
 }
 
+int findFileSize(int blockSize){
+    int blockCount = 1;
+    clock_t start, end;
+    double timeNeeded = 0;
+    char* filename = "tempfile";
+    int fd;
+
+    while(timeNeeded<0.0000001){
+        fd = open(filename, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO | S_IRWXG | S_IRWXU);
+        myWrite(fd,blockSize,blockCount);
+        close(fd);
+
+        fd = open(filename, O_RDONLY);
+        start=clock();
+        myRead(fd,blockSize);
+        end=clock();
+        timeNeeded = ((double) (end-start)) / CLOCKS_PER_SEC;
+
+        printf("Block count = %d, time: %fs", blockCount, timeNeeded);
+
+        close(fd);
+    }
+    return blockSize*blockCount;
+}
+
 int main(int argc, char *argv[]) {
     int fd, blockSize, blockCount;
     char mode;
