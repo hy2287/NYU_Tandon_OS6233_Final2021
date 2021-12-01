@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-void myWrite(int fd, int blockSize, int blockCount, int randomized) {
+void myWrite(int fd, size_t blockSize, size_t blockCount, int randomized) {
     char* buffer;
     buffer = (char*) malloc(blockSize);
     for (int i = 0; i < blockCount; i++) {
@@ -23,12 +23,12 @@ void myWrite(int fd, int blockSize, int blockCount, int randomized) {
     return;
 }
 
-unsigned int myRead(int fd, int blockSize) {
+unsigned int myRead(int fd, size_t blockSize) {
     int* buffer;
     unsigned int result = 0;
     buffer = (int*) malloc(blockSize);
     while (1) {
-        int byteRead = read(fd, buffer, blockSize);
+        ssize_t byteRead = read(fd, buffer, blockSize);
         if(byteRead==0){
             break;
         }
@@ -45,19 +45,19 @@ unsigned int myRead(int fd, int blockSize) {
     return result;
 }
 
-double measureReadTime(char* filename, int blockSize){
+double measureReadTime(char* filename, size_t blockSize){
     clock_t start, end;
     int fd = open(filename, O_RDONLY);
     start=clock();
     myRead(fd,blockSize);
     end=clock();
-    double timeNeeded = ((double) (end-start)) / CLOCKS_PER_SEC;
+    double timeNeeded = (double) ((end-start) / CLOCKS_PER_SEC);
     close(fd);
     return timeNeeded;
 }
 
-double findFileSize(int blockSize){
-    int blockCount = 1;
+unsigned long long findFileSize(size_t blockSize){
+    size_t blockCount = 1;
     clock_t start, end;
     double timeNeeded = 0;
     char* filename = "tempfile";
@@ -66,11 +66,11 @@ double findFileSize(int blockSize){
     while(timeNeeded<5){
         blockCount*=2;
         if(blockCount<=0){
-            printf("overflow during findFileSize: %d\n",blockCount);
+            printf("overflow during findFileSize: %lu\n",blockCount);
             break;
         }
         fd = open(filename, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO | S_IRWXG | S_IRWXU);
-        myWrite(fd,blockSize*blockCount,1,0);
+        myWrite(fd,blockSize, blockCount,0);
         close(fd);
 
         timeNeeded = measureReadTime(filename, blockSize);
@@ -78,19 +78,19 @@ double findFileSize(int blockSize){
     }
 
     remove(filename);
-    return blockSize*blockCount;
+    return (unsigned long long) blockSize * blockCount;
 }
 
-double getPerformance(int blockSize){
+double getPerformance(size_t blockSize){
     //return the MiB/s of the read operation by the specified block size
-    double desiredFileSize = findFileSize(blockSize);
-    int blockCount = (int) desiredFileSize/blockSize;
+    unsigned long long desiredFileSize = findFileSize(blockSize);
+    size_t blockCount = (size_t) (desiredFileSize / blockSize);
     char* filename = "tempfile_performance";
     int fd = open(filename, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO | S_IRWXG | S_IRWXU);
-    myWrite(fd,blockSize*blockCount,1,0);
+    myWrite(fd, blockSize, blockCount, 0);
     close(fd);
     double timeNeeded = measureReadTime(filename,blockSize);
-    double MiBPerSec = desiredFileSize/(1024*1024*timeNeeded);
+    double MiBPerSec = (double)(desiredFileSize/(unsigned long long)(1024*1024*timeNeeded));
     remove(filename);
     return MiBPerSec;
 }
