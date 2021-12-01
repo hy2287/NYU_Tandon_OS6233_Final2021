@@ -14,7 +14,10 @@ void myWrite(int fd, int blockSize, int blockCount, int randomized) {
                 buffer[i] = (rand() % 26) + 'a';
             }
         }
-        write(fd, buffer, blockSize);
+        if(write(fd, buffer, blockSize)<0){
+            printf("Write error encountered!");
+            break;
+        }
     }
     free(buffer);
     return;
@@ -24,7 +27,15 @@ unsigned int myRead(int fd, int blockSize) {
     int* buffer;
     unsigned int result = 0;
     buffer = (int*) malloc(blockSize);
-    while (read(fd, buffer, blockSize) > 0) {
+    while (1) {
+        int byteRead = read(fd, buffer, blockSize);
+        if(byteRead==0){
+            break;
+        }
+        else if(byteRead<0){
+            printf("Read error encountered!");
+            break;
+        }
         for (int i = 0; i < blockSize / 4; i++) {
             //printf("buffer[i] is %d\n", buffer[i]);
             result ^= buffer[i];
@@ -54,6 +65,10 @@ double findFileSize(int blockSize){
 
     while(timeNeeded<5){
         blockCount*=2;
+        if(blockCount<=0){
+            printf("overflow: %d",blockCount);
+            break;
+        }
         fd = open(filename, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO | S_IRWXG | S_IRWXU);
         myWrite(fd,blockSize*blockCount,1,0);
         close(fd);
@@ -106,10 +121,10 @@ int main(int argc, char *argv[]) {
     }
     else if (argc==2){
         if(sscanf (argv[1],"%d", &testBlockSize)==0){
-            printf("Invalid arg provided\n.");
+            printf("Invalid arg provided.\n");
         }
-        printf("block size = %d\n", testBlockSize);
-        findFileSize(testBlockSize);
+        double desiredFileSize = findFileSize(testBlockSize)/(1024*1024);
+        printf("block size: %d, desired filesize (in MiB): %f\n", testBlockSize, desiredFileSize);
     }
     else if(argc==1){
         printf("blocksize: %d, performance: %f MiB/s\n", 1, getPerformance(1));
@@ -117,7 +132,7 @@ int main(int argc, char *argv[]) {
         printf("blocksize: %d, performance: %f MiB/s\n", 100, getPerformance(100));
     }
     else{
-        printf("Invalid arg provided\n.");
+        printf("Invalid arg provided.\n");
     }
     exit(0);
 }
