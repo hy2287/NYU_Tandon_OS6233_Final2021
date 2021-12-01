@@ -15,7 +15,7 @@ void myWrite(int fd, int blockSize, int blockCount, int randomized) {
             }
         }
         if(write(fd, buffer, blockSize)<0){
-            printf("Write error encountered!");
+            printf("Write error encountered!\n");
             break;
         }
     }
@@ -33,7 +33,7 @@ unsigned int myRead(int fd, int blockSize) {
             break;
         }
         else if(byteRead<0){
-            printf("Read error encountered!");
+            printf("Read error encountered!\n");
             break;
         }
         for (int i = 0; i < blockSize / 4; i++) {
@@ -66,7 +66,7 @@ double findFileSize(int blockSize){
     while(timeNeeded<5){
         blockCount*=2;
         if(blockCount<=0){
-            printf("overflow: %d",blockCount);
+            printf("overflow during findFileSize: %d\n",blockCount);
             break;
         }
         fd = open(filename, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO | S_IRWXG | S_IRWXU);
