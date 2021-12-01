@@ -86,13 +86,15 @@ int main(int argc, char *argv[]) {
         printf("XOR Answer is %d\n", xorAnswer);
         close(fd);
     }
-    else if (argc==1){
+    else if (argc==2){
         if(sscanf (argv[1],"%d", &testBlockSize)==0){
             printf("Invalid arg provided\n.");
         }
         printf("block size = %d\n", testBlockSize);
         findFileSize(testBlockSize);
     }
-
+    else{
+        printf("Invalid arg provided\n.");
+    }
     exit(0);
 }
