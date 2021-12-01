@@ -34,6 +34,17 @@ unsigned int myRead(int fd, int blockSize) {
     return result;
 }
 
+double measureReadTime(char* filename, int blockSize){
+    clock_t start, end;
+    int fd = open(filename, O_RDONLY);
+    start=clock();
+    myRead(fd,blockSize);
+    end=clock();
+    double timeNeeded = ((double) (end-start)) / CLOCKS_PER_SEC;
+    close(fd);
+    return timeNeeded;
+}
+
 double findFileSize(int blockSize){
     int blockCount = 1;
     clock_t start, end;
@@ -47,15 +58,8 @@ double findFileSize(int blockSize){
         myWrite(fd,blockSize*blockCount,1,0);
         close(fd);
 
-        fd = open(filename, O_RDONLY);
-        start=clock();
-        myRead(fd,blockSize);
-        end=clock();
-        timeNeeded = ((double) (end-start)) / CLOCKS_PER_SEC;
-
-        printf("block size: %d, block count: %d, time: %fs\n", blockSize, blockCount, timeNeeded);
-
-        close(fd);
+        timeNeeded = measureReadTime(filename, blockSize);
+        //printf("block size: %d, block count: %d, time: %fs\n", blockSize, blockCount, timeNeeded);
     }
 
     remove(filename);
@@ -70,14 +74,7 @@ double getPerformance(int blockSize){
     int fd = open(filename, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO | S_IRWXG | S_IRWXU);
     myWrite(fd,blockSize*blockCount,1,0);
     close(fd);
-
-    fd = open(filename, O_RDONLY);
-
-    clock_t start, end;
-    start=clock();
-    myRead(fd,blockSize);
-    end=clock();
-    double timeNeeded = ((double) (end-start)) / CLOCKS_PER_SEC;
+    double timeNeeded = measureReadTime(filename,blockSize);
     double MiBPerSec = desiredFileSize/(1024*1024*timeNeeded);
     remove(filename);
     return MiBPerSec;
@@ -114,10 +111,12 @@ int main(int argc, char *argv[]) {
         printf("block size = %d\n", testBlockSize);
         findFileSize(testBlockSize);
     }
-    else{
+    else if(argc==1){
         printf("blocksize: %d, performance: %f MiB/s\n", 1, getPerformance(1));
         printf("blocksize: %d, performance: %f MiB/s\n", 10, getPerformance(10));
         printf("blocksize: %d, performance: %f MiB/s\n", 100, getPerformance(100));
+    }
+    else{
         printf("Invalid arg provided\n.");
     }
     exit(0);
