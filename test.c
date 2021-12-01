@@ -72,13 +72,11 @@ unsigned long long findFileSize(size_t blockSize){
         fd = open(filename, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO | S_IRWXG | S_IRWXU);
         myWrite(fd,blockSize, blockCount,0);
         close(fd);
-
         timeNeeded = measureReadTime(filename, blockSize);
-        //printf("block size: %d, block count: %d, time: %fs\n", blockSize, blockCount, timeNeeded);
     }
-
+    printf("block size: %lu, block count: %lu, time: %fs\n", blockSize, blockCount, timeNeeded);
     remove(filename);
-    return (unsigned long long) blockSize * blockCount;
+    return blockCount;
 }
 
 double getPerformance(size_t blockSize){
@@ -123,10 +121,12 @@ int main(int argc, char *argv[]) {
         if(sscanf (argv[1],"%d", &testBlockSize)==0){
             printf("Invalid arg provided.\n");
         }
-        double desiredFileSize = findFileSize(testBlockSize)/(1024*1024);
-        printf("block size: %d, desired filesize (in MiB): %f\n", testBlockSize, desiredFileSize);
+        unsigned long long desiredFileSize = (unsigned long long) findFileSize(testBlockSize)*(unsigned long long) testBlockSize;
+        unsigned long long desiredFileSizeMiBs = (desiredFileSize)/(1024*1024);
+        printf("block size: %d, desired filesize (in MiB): %llu\n", testBlockSize, desiredFileSizeMiBs);
     }
     else if(argc==1){
+        size_t blockSizesToTest[11] = {1, 4, 16, 256, 1024, 4096, 10240, 102400, 1024*1024, 4*1024*1024, 4294967295};
         printf("blocksize: %d, performance: %f MiB/s\n", 1, getPerformance(1));
         printf("blocksize: %d, performance: %f MiB/s\n", 10, getPerformance(10));
         printf("blocksize: %d, performance: %f MiB/s\n", 100, getPerformance(100));
