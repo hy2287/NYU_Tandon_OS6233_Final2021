@@ -24,72 +24,72 @@ echo blockSize 64 cached time:
 
 sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 echo blockSize 256 uncached time:
-./run testFile256bytes -r 256 16777216
+./run testFile64bytes -r 256 16777216
 echo blockSize 256 cached time:
-./run testFile256bytes -r 256 16777216
+./run testFile64bytes -r 256 16777216
 
 sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 echo blockSize 1024 uncached time:
-./run testFile1024bytes+ -r 1024 8388608
+./run testFile64bytes -r 1024 8388608
 echo blockSize 1024 cached time:
-./run testFile1024bytes+ -r 1024 8388608
+./run testFile64bytes -r 1024 8388608
 
 sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 echo blockSize 4096 uncached time:
-./run testFile1024bytes+ -r 4096 2097152
+./run testFile64bytes -r 4096 2097152
 echo blockSize 4096 cached time:
-./run testFile1024bytes+ -r 4096 2097152
+./run testFile64bytes -r 4096 2097152
 
 sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 echo blockSize 16384 uncached time:
-./run testFile1024bytes+ -r 16384 524288
+./run testFile64bytes -r 16384 524288
 echo blockSize 16384 cached time:
-./run testFile1024bytes+ -r 16384 524288
+./run testFile64bytes -r 16384 524288
 
 sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 echo blockSize 65536 uncached time:
-./run testFile1024bytes+ -r 65536 131072
+./run testFile64bytes -r 65536 131072
 echo blockSize 65536 cached time:
-./run testFile1024bytes+ -r 65536 131072
+./run testFile64bytes -r 65536 131072
 
 sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 echo blockSize 262144 uncached time:
-./run testFile1024bytes+ -r 262144 32768
+./run testFile64bytes -r 262144 32768
 echo blockSize 262144 cached time:
-./run testFile1024bytes+ -r 262144 32768
+./run testFile64bytes -r 262144 32768
 
 sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 echo blockSize 1048576 uncached time:
-./run testFile1024bytes+ -r 1048576 8192
+./run testFile64bytes -r 1048576 8192
 echo blockSize 1048576 cached time:
-./run testFile1024bytes+ -r 1048576 8192
+./run testFile64bytes -r 1048576 8192
 
 sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 echo blockSize 4194304 uncached time:
-./run testFile1024bytes+ -r 4194304 2048
+./run testFile64bytes -r 4194304 2048
 echo blockSize 4194304 cached time:
-./run testFile1024bytes+ -r 4194304 2048
+./run testFile64bytes -r 4194304 2048
 
 sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 echo blockSize 16777216 uncached time:
-./run testFile1024bytes+ -r 16777216 512
+./run testFile64bytes -r 16777216 512
 echo blockSize 16777216 cached time:
-./run testFile1024bytes+ -r 16777216 512
+./run testFile64bytes -r 16777216 512
 
 sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 echo blockSize 67108864 uncached time:
-./run testFile1024bytes+ -r 67108864 128
+./run testFile64bytes -r 67108864 128
 echo blockSize 67108864 cached time:
-./run testFile1024bytes+ -r 67108864 128
+./run testFile64bytes -r 67108864 128
 
 sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 echo blockSize 268435456 uncached time:
-./run testFile1024bytes+ -r 268435456 32
+./run testFile64bytes -r 268435456 32
 echo blockSize 268435456 cached time:
-./run testFile1024bytes+ -r 268435456 32
+./run testFile64bytes -r 268435456 32
 
 sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 echo blockSize 1073741824 uncached time:
-./run testFile1024bytes+ -r 1073741824 8
+./run testFile64bytes -r 1073741824 8
 echo blockSize 1073741824 cached time:
-./run testFile1024bytes+ -r 1073741824 8
+./run testFile64bytes -r 1073741824 8
