@@ -1,2 +1,2 @@
 Test: final_project.c
-	gcc final_project.c -o run
+	gcc -pthread final_project.c -o run
