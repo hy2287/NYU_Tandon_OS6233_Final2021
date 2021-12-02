@@ -82,6 +82,31 @@ unsigned int optimizedRead(char* filename, size_t blockSize) {
     return result;
 }
 
+unsigned int optimizedRead2(char* filename, size_t blockSize) {
+
+    int fd = open(filename, O_RDONLY | __O_LARGEFILE);
+
+    struct stat fileStat;
+    fstat(fd, &fileStat);
+    int* memoryPtr = (int*) mmap(NULL, fileStat.st_size, PROT_READ, MAP_SHARED | MAP_POPULATE, fd, 0);
+    if(memoryPtr == (int*) -1){
+        printf("mmap error");
+        return 0;
+    }
+
+    if(madvise(memoryPtr, fileStat.st_size, POSIX_MADV_SEQUENTIAL | MADV_WILLNEED)<0){
+        printf("fadvice error");
+        return 0;
+    }
+
+    unsigned int result = 0;
+    for(ssize_t index=0; index<fileStat.st_size/4; index++){
+        result ^= memoryPtr[index];
+    }
+    close(fd);
+    return result;
+}
+
 double measureReadTime(char* filename, size_t blockSize){
     clock_t start, end;
     int fd = open(filename, O_RDONLY);
@@ -97,7 +122,7 @@ double measureReadTime(char* filename, size_t blockSize){
 double measureOptimizedReadTime(char* filename, size_t blockSize){
     clock_t start, end;
     start = clock();
-    unsigned int xorAnswer = optimizedRead(filename, blockSize);
+    unsigned int xorAnswer = optimizedRead2(filename, blockSize);
     end = clock();
     double timeNeeded = ((double)(end-start) / (double)CLOCKS_PER_SEC);
     printf("XOR Answer is %u\n", xorAnswer);
