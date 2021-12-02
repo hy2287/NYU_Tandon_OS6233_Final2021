@@ -46,24 +46,6 @@ void myWrite(int fd, size_t blockSize, size_t blockCount, int randomized) {
     return;
 }
 
-void createRandomFile(char* filename, size_t blockSize, size_t blockCount){
-    int fd = open(filename, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO|S_IRWXG|S_IRWXU);
-    char* buffer = (char*) malloc(blockSize);
-    int rnd = open("/dev/urandom", O_RDONLY);
-    for(;blockCount>0;blockCount--){
-        if(read(rnd, buffer, blockSize)<0){
-            printf("Error reading random stream in createRandomFile\n");
-            break;
-        }
-        if (write(fd, buffer, blockSize) < 0) {
-            printf("Write error encountered in createRandomFile\n");
-            break;
-        }
-    }
-    close(rnd);
-    close(fd);
-}
-
 unsigned int myRead(int fd, size_t blockSize) {
     int* buffer;
     unsigned int result = 0;
@@ -273,9 +255,6 @@ int main(int argc, char *argv[]) {
             fd = open(argv[1], O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO|S_IRWXG|S_IRWXU);
             myWrite(fd, blockSize, blockCount, 1);          // write random alphabet letters into file
             close(fd);
-        }
-        else if (mode == 'c' || mode == 'C') {              // more efficiently write randomized data into file
-            createRandomFile(argv[1],blockSize,blockCount);
         }
         else if (mode == 'o'){
             //optimized read
