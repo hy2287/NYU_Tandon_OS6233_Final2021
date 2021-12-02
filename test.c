@@ -86,10 +86,21 @@ double measureReadTime(char* filename, size_t blockSize){
     clock_t start, end;
     int fd = open(filename, O_RDONLY);
     start = clock();
-    myRead(fd, blockSize);
+    unsigned int xorAnswer = myRead(fd, blockSize);
     end = clock();
     double timeNeeded = ((double)(end-start) / (double)CLOCKS_PER_SEC);
     close(fd);
+    printf("XOR Answer is %u\n", xorAnswer);
+    return timeNeeded;
+}
+
+double measureOptimizedReadTime(char* filename, size_t blockSize){
+    clock_t start, end;
+    start = clock();
+    unsigned int xorAnswer = optimizedRead(filename, blockSize);
+    end = clock();
+    double timeNeeded = ((double)(end-start) / (double)CLOCKS_PER_SEC);
+    printf("XOR Answer is %u\n", xorAnswer);
     return timeNeeded;
 }
 
@@ -135,7 +146,6 @@ int main(int argc, char *argv[]) {
     int fd;
     char mode = 'x';
     size_t blockSize, blockCount;                           // deleted testBlockSize and use blockSize instead
-    unsigned int xorAnswer = 0;
     srand(time(0));
 
     if (argc == 2) {                                        // print appropirate file size of given blockSize on stdout
@@ -151,9 +161,8 @@ int main(int argc, char *argv[]) {
         sscanf (argv[3], "%lu", &blockSize);
         sscanf (argv[4], "%lu", &blockCount);
         if (mode == 'r' || mode == 'R') {                   // read mode
-            fd = open(argv[1], O_RDONLY);
-            xorAnswer = myRead(fd, blockSize);
-            printf("XOR Answer is %u\n", xorAnswer);
+            double timeNeeded = measureReadTime(argv[1], blockSize);
+            printf("Read time: %f\n", timeNeeded);
         }
         else if (mode == 'w' || mode == 'W') {              // write mode
             fd = open(argv[1], O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO|S_IRWXG|S_IRWXU);
@@ -162,8 +171,8 @@ int main(int argc, char *argv[]) {
         }
         else if (mode == 'o'){
             //optimized read
-            xorAnswer = optimizedRead(argv[1], blockSize);
-            printf("Optimized read: XOR Answer is %d\n", xorAnswer);
+            double timeNeeded = measureOptimizedReadTime(argv[1], blockSize);
+            printf("Optimized read time: %f\n", timeNeeded);
         }
     }
     else {
