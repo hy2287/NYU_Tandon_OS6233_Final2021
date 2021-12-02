@@ -1,2 +1,2 @@
-Test: test.c
-	gcc test.c -o test
+Test: final_project.c
+	gcc final_project.c -o run
