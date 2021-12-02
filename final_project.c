@@ -172,10 +172,21 @@ double measureReadTime(char* filename, size_t blockSize){
     return timeNeeded;
 }
 
-double measureOptimizedReadTime(char* filename, size_t blockSize){
+double measureOptimizedReadTime(char* filename, size_t blockSize, int readVersion){
     clock_t start, end;
+    unsigned int xorAnswer;
     start = clock();
-    unsigned int xorAnswer = optimizedRead2(filename, blockSize);
+    switch (readVersion)
+    {
+        case 1:
+            xorAnswer = optimizedRead(filename, blockSize);
+            break;
+        case 2:
+            xorAnswer = optimizedRead2(filename, blockSize);
+            break;
+        default:
+            break;
+    }
     end = clock();
     double timeNeeded = ((double)(end-start) / (double)CLOCKS_PER_SEC);
     printf("XOR Answer is %u\n", xorAnswer);
@@ -206,17 +217,33 @@ unsigned long long findFileSize(size_t blockSize){                          // r
     return blockCount;
 }
 
-double getPerformance(size_t blockSize){
+double getPerformance(char* filename, size_t blockSize, int readVersion){
     //return the MiB/s of the read operation by the specified block size
-    unsigned long long desiredFileSize = findFileSize(blockSize);
-    size_t blockCount = (size_t) (desiredFileSize / blockSize);
-    char* filename = "tempfile_performance";
-    int fd = open(filename, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO | S_IRWXG | S_IRWXU);
-    myWrite(fd, blockSize, blockCount, 0);
-    close(fd);
-    double timeNeeded = measureReadTime(filename,blockSize);
-    double MiBPerSec = (double)(desiredFileSize/(unsigned long long)(1024*1024*timeNeeded));
-    remove(filename);
+    int fd = open(filename, O_RDONLY);
+    struct stat fileStat;
+    fstat(fd, &fileStat);
+    size_t fileSize = fileStat.st_size/(1024*1024);
+    double timeNeeded;
+    switch (readVersion)
+    {
+        case 0:
+            timeNeeded = measureReadTime(filename,blockSize);
+            break;
+        case 1:
+            timeNeeded = measureOptimizedReadTime(filename,blockSize,1);
+            break;
+        case 2:
+            timeNeeded = measureOptimizedReadTime(filename,blockSize,2);
+            break;
+        case 3:
+            timeNeeded = measureOptimizedReadTime(filename,blockSize,3);
+            break;
+        default:
+            return 0;
+            break;
+    }
+    printf("Read time: %f\n", timeNeeded);
+    double MiBPerSec = (double)(fileSize/timeNeeded);
     return MiBPerSec;
 }
 
@@ -239,8 +266,8 @@ int main(int argc, char *argv[]) {
         sscanf (argv[3], "%lu", &blockSize);
         sscanf (argv[4], "%lu", &blockCount);
         if (mode == 'r' || mode == 'R') {                   // read mode
-            double timeNeeded = measureReadTime(argv[1], blockSize);
-            printf("Read time: %f\n", timeNeeded);
+            double MiBPerSec = getPerformance(argv[1], blockSize, 0);
+            printf("BlockSize: %lu, Read speed (MiB/sec): %f\n", blockSize, MiBPerSec);
         }
         else if (mode == 'w' || mode == 'W') {              // write mode
             fd = open(argv[1], O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO|S_IRWXG|S_IRWXU);
@@ -252,8 +279,8 @@ int main(int argc, char *argv[]) {
         }
         else if (mode == 'o'){
             //optimized read
-            double timeNeeded = measureOptimizedReadTime(argv[1], blockSize);
-            printf("Optimized read time: %f\n", timeNeeded);
+            double MiBPerSec = getPerformance(argv[1], blockSize, 1);
+            printf("BlockSize: %lu, Optimized read speed (MiB/sec): %f\n", blockSize, MiBPerSec);
         }
     }
     else {
