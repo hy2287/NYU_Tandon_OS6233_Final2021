@@ -78,6 +78,7 @@ unsigned int optimizedRead(char* filename, size_t blockSize) {
         }
     }
     free(buffer);
+    close(fd);
     return result;
 }
 
@@ -158,6 +159,11 @@ int main(int argc, char *argv[]) {
             fd = open(argv[1], O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO|S_IRWXG|S_IRWXU);
             myWrite(fd, blockSize, blockCount, 1);          // write random alphabet letters into file
             close(fd);
+        }
+        else if (mode == 'o'){
+            //optimized read
+            xorAnswer = optimizedRead(argv[1], blockSize);
+            printf("Optimized read: XOR Answer is %d\n", xorAnswer);
         }
     }
     else {
