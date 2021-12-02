@@ -7,8 +7,26 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <pthread.h>
+#include <string.h>
 
-int num_threads = 4;
+int num_threads = 2;
+pthread_spinlock_t spinlock1, spinlock2;
+
+struct readThread_args{
+    int fd;
+    int* buffer1;
+    int* buffer2;
+    size_t blockSize;
+};
+
+struct xorThread_args{
+    int* buffer1;
+    int* buffer2;
+    size_t blockSize;
+    size_t blockCount;
+    unsigned int xor_result;
+};
+
 struct multithreaded_read_argstruct {
     int tid;
     int* buffer;
@@ -68,37 +86,115 @@ unsigned int myRead(int fd, size_t blockSize) {
     return result;
 }
 
+void *run_readThread(void* args){
+    struct readThread_args * readThreadArgs = (struct readThread_args*) args;
+    ssize_t byteRead;
+    while (1) {
+        pthread_spin_lock(&spinlock1);
+        byteRead = read(readThreadArgs->fd, readThreadArgs->buffer1, readThreadArgs->blockSize);
+        if(byteRead == 0) {
+            pthread_spin_unlock(&spinlock1);
+            break;
+        }
+        else if (byteRead < 0) {
+            printf("Read error encountered in optimized read!\n");
+            pthread_spin_unlock(&spinlock1);
+            break;
+        }
+        pthread_spin_unlock(&spinlock1);
+
+        pthread_spin_lock(&spinlock2);
+        byteRead = read(readThreadArgs->fd, readThreadArgs->buffer2, readThreadArgs->blockSize);
+        if(byteRead == 0) {
+            pthread_spin_unlock(&spinlock2);
+            break;
+        }
+        else if (byteRead < 0) {
+            printf("Read error encountered in optimized read!\n");
+            pthread_spin_unlock(&spinlock2);
+            break;
+        }
+        pthread_spin_unlock(&spinlock2);
+    }
+    pthread_exit(NULL);
+}
+
+void *run_xorThread(void* args){
+    struct xorThread_args * xorThreadArgs = (struct xorThread_args*) args;
+    size_t totalIterations = (xorThreadArgs->blockCount/2);
+
+    for(size_t count=0; count< totalIterations; count++){
+        pthread_spin_lock(&spinlock1);
+        for (int i = 0; i < xorThreadArgs->blockSize / 4; i++) {
+            xorThreadArgs->xor_result ^= xorThreadArgs->buffer1[i];
+        }
+        pthread_spin_unlock(&spinlock1);
+
+        pthread_spin_lock(&spinlock2);
+        for (int i = 0; i < xorThreadArgs->blockSize / 4; i++) {
+            xorThreadArgs->xor_result ^= xorThreadArgs->buffer2[i];
+        }
+        pthread_spin_unlock(&spinlock2);
+    }
+
+    if(xorThreadArgs->blockCount%2){
+        pthread_spin_lock(&spinlock1);
+        for (int i = 0; i < xorThreadArgs->blockSize / 4; i++) {
+            xorThreadArgs->xor_result ^= xorThreadArgs->buffer1[i];
+        }
+        pthread_spin_unlock(&spinlock1);
+    }
+
+    pthread_exit(NULL);
+}
+
 unsigned int optimizedRead(char* filename, size_t blockSize) {
 
-    int fd = open(filename, O_RDONLY | __O_LARGEFILE);
+    blockSize = 4194304;
+    
+    pthread_t readThread, xorThread;
+    struct readThread_args readThreadData;
+    struct xorThread_args xorThreadData;
 
+    pthread_spin_init(&spinlock1, 0);
+    pthread_spin_init(&spinlock2, 0);
+
+    int* buffer1 = (int*) malloc(blockSize);
+    memset(buffer1, 0, blockSize);
+    int* buffer2 = (int*) malloc(blockSize);
+    memset(buffer2, 0, blockSize);
+
+    int fd = open(filename, O_RDONLY | __O_LARGEFILE);
     struct stat fileStat;
     fstat(fd, &fileStat);
-    mmap(NULL, fileStat.st_size, PROT_READ, MAP_SHARED, fd, 0);
+    size_t blockCount = fileStat.st_size/blockSize;
 
-    if(posix_fadvise(fd, 0, 0, POSIX_FADV_SEQUENTIAL)<0){
+    readThreadData.fd = fd;
+    readThreadData.blockSize = blockSize;
+    readThreadData.buffer1 = buffer1;
+    readThreadData.buffer2 = buffer2;
+
+    xorThreadData.blockCount = blockCount;
+    xorThreadData.blockSize = blockSize;
+    xorThreadData.buffer1 = buffer1;
+    xorThreadData.buffer2 = buffer2;
+    xorThreadData.xor_result = 0;
+
+    if(posix_fadvise(fd, 0, 0, POSIX_FADV_SEQUENTIAL | POSIX_MADV_WILLNEED)<0){
         printf("fadvice error");
         return 0;
     }
 
-    int* buffer;
-    unsigned int result = 0;
-    buffer = (int*) malloc(blockSize);
-    while (1) {
-        ssize_t byteRead = read(fd, buffer, blockSize);
-        if(byteRead==0){
-            break;
-        }
-        else if(byteRead<0){
-            printf("Read error encountered!\n");
-            break;
-        }
-        for (int i = 0; i < blockSize / 4; i++) {
-            //printf("buffer[i] is %d\n", buffer[i]);
-            result ^= buffer[i];
-        }
-    }
-    free(buffer);
+    pthread_create(&readThread, NULL, &run_readThread, (void*) &readThreadData);
+    pthread_create(&xorThread, NULL, &run_xorThread, (void*) &xorThreadData);
+
+    pthread_join(readThread, NULL);
+    pthread_join(xorThread, NULL);
+
+    unsigned int result = xorThreadData.xor_result;
+    
+    free(buffer1);
+    free(buffer2);
     close(fd);
     return result;
 }
