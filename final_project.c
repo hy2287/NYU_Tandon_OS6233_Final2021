@@ -77,7 +77,7 @@ unsigned int myRead(int fd, size_t blockSize) {
             printf("Read error encountered in myRead, blockSize = %lu!\n", blockSize);
             break;
         }
-        for (int i = 0; i < blockSize / 4; i++) {
+        for (int i = 0; i < byteRead / 4; i++) {
             // printf("buffer[i] is %d\n", buffer[i]);
             result ^= buffer[i];
         }
