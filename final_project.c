@@ -65,9 +65,9 @@ void myWrite(int fd, size_t blockSize, size_t blockCount, int randomized) {
 }
 
 unsigned int myRead(int fd, size_t blockSize) {
-    int* buffer;
+    unsigned int* buffer;
     unsigned int result = 0;
-    buffer = (int*) malloc(blockSize);
+    buffer = (unsigned int*) malloc(blockSize);
     while (1) {
         ssize_t byteRead = read(fd, buffer, blockSize);
         if(byteRead == 0) {
@@ -246,7 +246,7 @@ double measureReadTime(char* filename, size_t blockSize){
     end = clock();
     double timeNeeded = ((double)(end-start) / (double)CLOCKS_PER_SEC);
     close(fd);
-    printf("XOR Answer is %u\n", xorAnswer);
+    printf("XOR Answer is %08x\n", xorAnswer);
     return timeNeeded;
 }
 
