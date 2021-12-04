@@ -46,17 +46,12 @@ void *parallel_xor(void* args){
     pthread_exit(NULL);
 }
 
-void myWrite(int fd, size_t blockSize, size_t blockCount, int randomized) {
+void myWrite(int fd, size_t blockSize, size_t blockCount) {
     char* buffer;
     buffer = (char*) malloc(blockSize);
     for (int i = 0; i < blockCount; i++) {
-        if(randomized){
-            for (int i = 0; i < blockSize; i++) {
-                buffer[i] = (rand() % 26) + 'a';
-            }
-        }
         if (write(fd, buffer, blockSize) < 0) {
-            printf("Write error encountered in myWrite, blockSize = %lu, blockCount = %lu!\n", blockSize, blockCount);
+            printf("Error: write error encountered in myWrite, blockSize = %lu, blockCount = %lu!\n", blockSize, blockCount);
             break;
         }
     }
@@ -64,21 +59,52 @@ void myWrite(int fd, size_t blockSize, size_t blockCount, int randomized) {
     return;
 }
 
-unsigned int myRead(int fd, size_t blockSize) {
+unsigned int myRead(int fd, size_t blockSize, size_t blockCount) {
     unsigned int* buffer;
     unsigned int result = 0;
+    struct stat fileStat;
+    fstat(fd, &fileStat);
+
+    long int totalBlockSize = blockSize * blockCount;
+    if (fileStat.st_size < totalBlockSize) {
+        printf("Error: file size (%ld bytes) is smaller than blockSize * blockCount (%lu bytes)\n", fileStat.st_size, totalBlockSize);
+        exit(1);
+    }
+    else if (blockSize > 2147479552) {
+        printf("Error: read blockSize cannot be greater than 2147479552\n");
+        exit(1);
+    }
+
     buffer = (unsigned int*) malloc(blockSize);
+    while (blockCount > 0) {
+        ssize_t bytesRead = read(fd, buffer, blockSize);
+        if (bytesRead == 0)
+            break;
+        ssize_t numOfInt = bytesRead / 4;
+        for (ssize_t i = 0; i < numOfInt; i++) {
+            result ^= buffer[i];
+        }
+        blockCount--;
+    }
+    free(buffer);
+    return result;
+}
+
+unsigned int myReadFast(int fd) {
+    unsigned int* buffer;
+    unsigned int result = 0;
+    size_t BLOCK_SIZE = 1048576;                                    // draft: blockSize 1048576 bytes (1 MiB)
+    buffer = (unsigned int*) malloc(BLOCK_SIZE);
     while (1) {
-        ssize_t byteRead = read(fd, buffer, blockSize);
-        if(byteRead == 0) {
+        ssize_t byteRead = read(fd, buffer, BLOCK_SIZE);
+        if (byteRead == 0) {
             break;
         }
         else if (byteRead < 0) {
-            printf("Read error encountered in myRead, blockSize = %lu!\n", blockSize);
+            printf("Error: read error encountered in myReadFast, blockSize = %lu!\n", BLOCK_SIZE);
             break;
         }
         for (int i = 0; i < byteRead / 4; i++) {
-            // printf("buffer[i] is %d\n", buffer[i]);
             result ^= buffer[i];
         }
     }
@@ -238,7 +264,7 @@ unsigned int optimizedRead2(char* filename, size_t blockSize) {
     return result;
 }
 
-double measureReadTime(char* filename, size_t blockSize){
+/*double measureReadTime(char* filename, size_t blockSize){
     clock_t start, end;
     int fd = open(filename, O_RDONLY);
     start = clock();
@@ -248,7 +274,7 @@ double measureReadTime(char* filename, size_t blockSize){
     close(fd);
     printf("XOR Answer is %08x\n", xorAnswer);
     return timeNeeded;
-}
+}*/
 
 double measureOptimizedReadTime(char* filename, size_t blockSize, int readVersion){
     clock_t start, end;
@@ -271,7 +297,7 @@ double measureOptimizedReadTime(char* filename, size_t blockSize, int readVersio
     return timeNeeded;
 }
 
-unsigned long long findFileSize(size_t blockSize){                          // return reasonable fileSize (in bytes) to test with given blockSize
+/*unsigned long long findFileSize(size_t blockSize){                          // return reasonable fileSize (in bytes) to test with given blockSize
     size_t blockCount = 1;
     clock_t start, end;
     double timeNeeded = 0;
@@ -293,9 +319,9 @@ unsigned long long findFileSize(size_t blockSize){                          // r
     remove(filename);
 
     return blockCount;
-}
+}*/
 
-double getPerformance(char* filename, size_t blockSize, int readVersion){
+/*double getPerformance(char* filename, size_t blockSize, int readVersion){
     //return the MiB/s of the read operation by the specified block size
     int fd = open(filename, O_RDONLY);
     struct stat fileStat;
@@ -323,40 +349,49 @@ double getPerformance(char* filename, size_t blockSize, int readVersion){
     printf("Read time: %f\n", timeNeeded);
     double MiBPerSec = (double)(fileSize/timeNeeded);
     return MiBPerSec;
-}
+}*/
 
 int main(int argc, char *argv[]) {
     int fd;
     char mode = 'x';
     size_t blockSize, blockCount;                           // deleted testBlockSize and use blockSize instead
-    srand(time(0));
+    //srand(time(0));
 
-    if (argc == 2) {                                        // print appropirate file size of given blockSize on stdout
+    if (argc == 2) {                                        // calls by fast script
+        fd = open(argv[1], O_RDONLY);
+        unsigned int result = myReadFast(fd);
+        printf("XOR result of file %s is %08x", argv[1], result);
+    }
+    /*if (argc == 2) {                                        // print appropirate file size of given blockSize on stdout
         if (sscanf(argv[1], "%lu", &blockSize) <= 0) {      // store stdin arg into blockSize
             printf("Invalid arg provided.\n");
         }
         unsigned long long fileSize = findFileSize(blockSize) * blockSize;
         unsigned long long fileSizeMiB = fileSize / 1048576;
         printf("Input BlockSize: %lu, Reasonable FileSize: %llu bytes (%llu MiB)\n", blockSize, fileSize, fileSizeMiB);
-    }
+    }*/
     else if (argc == 5) {                                   // normal mode - read or write
-        sscanf (argv[2], "-%c", &mode);
-        sscanf (argv[3], "%lu", &blockSize);
-        sscanf (argv[4], "%lu", &blockCount);
+        sscanf(argv[2], "-%c", &mode);
+        sscanf(argv[3], "%lu", &blockSize);
+        sscanf(argv[4], "%lu", &blockCount);
         if (mode == 'r' || mode == 'R') {                   // read mode
-            double MiBPerSec = getPerformance(argv[1], blockSize, 0);
-            printf("BlockSize: %lu, Read speed (MiB/sec): %f\n", blockSize, MiBPerSec);
+            //double MiBPerSec = getPerformance(argv[1], blockSize, 0);
+            //printf("BlockSize: %lu, Read speed (MiB/sec): %f\n", blockSize, MiBPerSec);
+            fd = open(argv[1], O_RDONLY);
+            unsigned int result = myRead(fd, blockSize, blockCount);
+            close(fd);
+            printf("XOR result is %08x\n", result);
         }
         else if (mode == 'w' || mode == 'W') {              // write mode
             fd = open(argv[1], O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO|S_IRWXG|S_IRWXU);
-            myWrite(fd, blockSize, blockCount, 1);          // write random alphabet letters into file
+            myWrite(fd, blockSize, blockCount);          // write random alphabet letters into file
             close(fd);
         }
-        else if (mode == 'o'){
+        /*else if (mode == 'o'){
             //optimized read
             double MiBPerSec = getPerformance(argv[1], blockSize, 1);
             printf("BlockSize: %lu, Optimized read speed (MiB/sec): %f\n", blockSize, MiBPerSec);
-        }
+        }*/
     }
     else {
         printf("Invalid arg provided.\n");
