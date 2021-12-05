@@ -360,7 +360,8 @@ int main(int argc, char *argv[]) {
     if (argc == 2) {                                        // calls by fast script
         fd = open(argv[1], O_RDONLY);
         unsigned int result = myReadFast(fd);
-        printf("XOR result of file %s is %08x", argv[1], result);
+        printf("XOR result of file %s is %08x\n", argv[1], result);
+        close(fd);
     }
     /*if (argc == 2) {                                        // print appropirate file size of given blockSize on stdout
         if (sscanf(argv[1], "%lu", &blockSize) <= 0) {      // store stdin arg into blockSize
@@ -379,8 +380,8 @@ int main(int argc, char *argv[]) {
             //printf("BlockSize: %lu, Read speed (MiB/sec): %f\n", blockSize, MiBPerSec);
             fd = open(argv[1], O_RDONLY);
             unsigned int result = myRead(fd, blockSize, blockCount);
+            printf("XOR result of file %s is %08x\n", argv[1], result);
             close(fd);
-            printf("XOR result is %08x\n", result);
         }
         else if (mode == 'w' || mode == 'W') {              // write mode
             fd = open(argv[1], O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO|S_IRWXG|S_IRWXU);
