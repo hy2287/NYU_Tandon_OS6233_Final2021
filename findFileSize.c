@@ -9,20 +9,16 @@
 #include "readWrite.h"
 
 double measureReadTime(char* filename, size_t blockSize, size_t blockCount){
-    clock_t start, end;
     int fd = open(filename, O_RDONLY);
-    start = clock();
-    unsigned int xorAnswer = myRead(fd, blockSize, blockCount);
-    end = clock();
-    double timeNeeded = ((double)(end-start) / (double)CLOCKS_PER_SEC);
+    time_t start = time(NULL);
+    myRead(fd, blockSize, blockCount);
+    double timeNeeded = (double) (time(NULL) - start);
     close(fd);
-    printf("XOR Answer is %08x\n", xorAnswer);
     return timeNeeded;
 }
 
 unsigned long long findFileSize(size_t blockSize){                          // return reasonable fileSize (in bytes) to test with given blockSize
     size_t blockCount = 1;
-    clock_t start, end;
     double timeNeeded = 0;
     char* filename = "tempFile";
     int fd;
@@ -38,7 +34,7 @@ unsigned long long findFileSize(size_t blockSize){                          // r
         close(fd);
         timeNeeded = measureReadTime(filename, blockSize, blockCount);
     }
-    printf("Block Size: %lu, Block Count: %lu, Time Used to Read: %f sec\n", blockSize, blockCount, timeNeeded);
+    printf("Block Size: %lu, Block Count: %lu, Time Used to Read: %.2f sec\n", blockSize, blockCount, timeNeeded);
     remove(filename);
 
     return blockCount;
