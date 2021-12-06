@@ -1,313 +1,128 @@
 #!/bin/bash
 
-echo "writing testing temp files (2720 MiB space required)..."
+echo "writing testing temp files (15,008 MiB space required)..."
 ./run tf1 -w 1048576 32
 ./run tf4 -w 1048576 128
 ./run tf16 -w 1048576 512
 ./run tf64 -w 1048576 2048
+./run tf256 -w 1048576 4096
+./run tf1024 -w 1048576 8192
 
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 1 B, block count 33554432, file size 32 MiB, attempt 1"
-time ./run tf1 -r 1 33554432
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 1 B, block count 33554432, file size 32 MiB, attempt 2"
-time ./run tf1 -r 1 33554432
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 1 B, block count 33554432, file size 32 MiB, attempt 3"
-time ./run tf1 -r 1 33554432
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 1 B, block count 33554432, file size 32 MiB, attempt 4"
-time ./run tf1 -r 1 33554432
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 1 B, block count 33554432, file size 32 MiB, attempt 5"
-time ./run tf1 -r 1 33554432
+for i in {1..5}
+do
+    sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
+    echo "block size 1 B, block count 33554432, file size 32 MiB, attempt $i"
+    time ./run tf1 -r 1 33554432
+done
 
-echo ""
-echo ""
+for i in {1..5}
+do
+    sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
+    echo "block size 4 B, block count 33554432, file size 128 MiB, attempt $i"
+    time ./run tf4 -r 4 33554432
+done
 
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 4 B, block count 33554432, file size 128 MiB, attempt 1"
-time ./run tf4 -r 4 33554432
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 4 B, block count 33554432, file size 128 MiB, attempt 2"
-time ./run tf4 -r 4 33554432
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 4 B, block count 33554432, file size 128 MiB, attempt 3"
-time ./run tf4 -r 4 33554432
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 4 B, block count 33554432, file size 128 MiB, attempt 4"
-time ./run tf4 -r 4 33554432
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 4 B, block count 33554432, file size 128 MiB, attempt 5"
-time ./run tf4 -r 4 33554432
+for i in {1..5}
+do
+    sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
+    echo "block size 16 B, block count 33554432, file size 512 MiB, attempt $i"
+    time ./run tf16 -r 16 33554432
+done
 
-echo ""
-echo ""
+for i in {1..5}
+do
+    sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
+    echo "block size 64 B, block count 33554432, file size 2 GiB, attempt $i"
+    time ./run tf64 -r 64 33554432
+done
 
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 16 B, block count 33554432, file size 512 MiB, attempt 1"
-time ./run tf16 -r 16 33554432
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 16 B, block count 33554432, file size 512 MiB, attempt 2"
-time ./run tf16 -r 16 33554432
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 16 B, block count 33554432, file size 512 MiB, attempt 3"
-time ./run tf16 -r 16 33554432
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 16 B, block count 33554432, file size 512 MiB, attempt 4"
-time ./run tf16 -r 16 33554432
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 16 B, block count 33554432, file size 512 MiB, attempt 5"
-time ./run tf16 -r 16 33554432
+for i in {1..5}
+do
+    sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
+    echo "block size 256 B, block count 16777216, file size 4 GiB, attempt $i"
+    time ./run tf256 -r 256 16777216
+done
 
-echo ""
-echo ""
+for i in {1..5}
+do
+    sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
+    echo "block size 1 KiB, block count 8388608, file size 8 GiB, attempt $i"
+    time ./run tf1024 -r 1024 8388608
+done
 
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 64 B, block count 33554432, file size 2 GiB, attempt 1"
-time ./run tf64 -r 64 33554432
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 64 B, block count 33554432, file size 2 GiB, attempt 2"
-time ./run tf64 -r 64 33554432
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 64 B, block count 33554432, file size 2 GiB, attempt 3"
-time ./run tf64 -r 64 33554432
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 64 B, block count 33554432, file size 2 GiB, attempt 4"
-time ./run tf64 -r 64 33554432
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 64 B, block count 33554432, file size 2 GiB, attempt 5"
-time ./run tf64 -r 64 33554432
+for i in {1..5}
+do
+    sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
+    echo "block size 4 KiB, block count 2097152, file size 8 GiB, attempt $i"
+    time ./run tf1024 -r 4096 2097152
+done
 
-echo ""
-echo ""
+for i in {1..5}
+do
+    sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
+    echo "block size 16 KiB, block count 524288, file size 8 GiB, attempt $i"
+    time ./run tf1024 -r 16384 524288
+done
 
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 256 B, block count 8388608, file size 2 GiB, attempt 1"
-time ./run tf64 -r 256 8388608
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 256 B, block count 8388608, file size 2 GiB, attempt 2"
-time ./run tf64 -r 256 8388608
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 256 B, block count 8388608, file size 2 GiB, attempt 3"
-time ./run tf64 -r 256 8388608
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 256 B, block count 8388608, file size 2 GiB, attempt 4"
-time ./run tf64 -r 256 8388608
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 256 B, block count 8388608, file size 2 GiB, attempt 5"
-time ./run tf64 -r 256 8388608
+for i in {1..5}
+do
+    sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
+    echo "block size 64 KiB, block count 131072, file size 8 GiB, attempt $i"
+    time ./run tf1024 -r 65536 131072
+done
 
-echo ""
-echo ""
+for i in {1..5}
+do
+    sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
+    echo "block size 256 KiB, block count 32768, file size 8 GiB, attempt $i"
+    time ./run tf1024 -r 262144 32768
+done
 
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 1 KiB, block count 2097152, file size 2 GiB, attempt 1"
-time ./run tf64 -r 1024 2097152
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 1 KiB, block count 2097152, file size 2 GiB, attempt 2"
-time ./run tf64 -r 1024 2097152
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 1 KiB, block count 2097152, file size 2 GiB, attempt 3"
-time ./run tf64 -r 1024 2097152
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 1 KiB, block count 2097152, file size 2 GiB, attempt 4"
-time ./run tf64 -r 1024 2097152
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 1 KiB, block count 2097152, file size 2 GiB, attempt 5"
-time ./run tf64 -r 1024 2097152
+for i in {1..5}
+do
+    sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
+    echo "block size 1 MiB, block count 8192, file size 8 GiB, attempt $i"
+    time ./run tf1024 -r 1048576 8192
+done
 
-echo ""
-echo ""
+for i in {1..5}
+do
+    sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
+    echo "block size 4 MiB, block count 2048, file size 8 GiB, attempt $i"
+    time ./run tf1024 -r 4194304 2048
+done
 
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 4 KiB, block count 524288, file size 2 GiB, attempt 1"
-time ./run tf64 -r 4096 524288
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 4 KiB, block count 524288, file size 2 GiB, attempt 2"
-time ./run tf64 -r 4096 524288
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 4 KiB, block count 524288, file size 2 GiB, attempt 3"
-time ./run tf64 -r 4096 524288
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 4 KiB, block count 524288, file size 2 GiB, attempt 4"
-time ./run tf64 -r 4096 524288
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 4 KiB, block count 524288, file size 2 GiB, attempt 5"
-time ./run tf64 -r 4096 524288
+for i in {1..5}
+do
+    sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
+    echo "block size 16 MiB, block count 512, file size 8 GiB, attempt $i"
+    time ./run tf1024 -r 16777216 512
+done
 
-echo ""
-echo ""
+for i in {1..5}
+do
+    sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
+    echo "block size 64 MiB, block count 128, file size 8 GiB, attempt $i"
+    time ./run tf1024 -r 67108864 128
+done
 
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 16 KiB, block count 131072, file size 2 GiB, attempt 1"
-time ./run tf64 -r 16384 131072
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 16 KiB, block count 131072, file size 2 GiB, attempt 2"
-time ./run tf64 -r 16384 131072
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 16 KiB, block count 131072, file size 2 GiB, attempt 3"
-time ./run tf64 -r 16384 131072
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 16 KiB, block count 131072, file size 2 GiB, attempt 4"
-time ./run tf64 -r 16384 131072
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 16 KiB, block count 131072, file size 2 GiB, attempt 5"
-time ./run tf64 -r 16384 131072
+for i in {1..5}
+do
+    sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
+    echo "block size 256 MiB, block count 32, file size 8 GiB, attempt $i"
+    time ./run tf1024 -r 268435456 32
+done
 
-echo ""
-echo ""
-
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 64 KiB, block count 32768, file size 2 GiB, attempt 1"
-time ./run tf64 -r 65536 32768
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 64 KiB, block count 32768, file size 2 GiB, attempt 2"
-time ./run tf64 -r 65536 32768
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 64 KiB, block count 32768, file size 2 GiB, attempt 3"
-time ./run tf64 -r 65536 32768
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 64 KiB, block count 32768, file size 2 GiB, attempt 4"
-time ./run tf64 -r 65536 32768
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 64 KiB, block count 32768, file size 2 GiB, attempt 5"
-time ./run tf64 -r 65536 32768
-
-echo ""
-echo ""
-
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 256 KiB, block count 8192, file size 2 GiB, attempt 1"
-time ./run tf64 -r 262144 8192
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 256 KiB, block count 8192, file size 2 GiB, attempt 2"
-time ./run tf64 -r 262144 8192
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 256 KiB, block count 8192, file size 2 GiB, attempt 3"
-time ./run tf64 -r 262144 8192
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 256 KiB, block count 8192, file size 2 GiB, attempt 4"
-time ./run tf64 -r 262144 8192
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 256 KiB, block count 8192, file size 2 GiB, attempt 5"
-time ./run tf64 -r 262144 8192
-
-echo ""
-echo ""
-
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 1 MiB, block count 2048, file size 2 GiB, attempt 1"
-time ./run tf64 -r 1048576 2048
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 1 MiB, block count 2048, file size 2 GiB, attempt 2"
-time ./run tf64 -r 1048576 2048
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 1 MiB, block count 2048, file size 2 GiB, attempt 3"
-time ./run tf64 -r 1048576 2048
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 1 MiB, block count 2048, file size 2 GiB, attempt 4"
-time ./run tf64 -r 1048576 2048
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 1 MiB, block count 2048, file size 2 GiB, attempt 5"
-time ./run tf64 -r 1048576 2048
-
-echo ""
-echo ""
-
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 4 MiB, block count 512, file size 2 GiB, attempt 1"
-time ./run tf64 -r 4194304 512
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 4 MiB, block count 512, file size 2 GiB, attempt 2"
-time ./run tf64 -r 4194304 512
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 4 MiB, block count 512, file size 2 GiB, attempt 3"
-time ./run tf64 -r 4194304 512
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 4 MiB, block count 512, file size 2 GiB, attempt 4"
-time ./run tf64 -r 4194304 512
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 4 MiB, block count 512, file size 2 GiB, attempt 5"
-time ./run tf64 -r 4194304 512
-
-echo ""
-echo ""
-
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 16 MiB, block count 128, file size 2 GiB, attempt 1"
-time ./run tf64 -r 16777216 128
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 16 MiB, block count 128, file size 2 GiB, attempt 2"
-time ./run tf64 -r 16777216 128
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 16 MiB, block count 128, file size 2 GiB, attempt 3"
-time ./run tf64 -r 16777216 128
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 16 MiB, block count 128, file size 2 GiB, attempt 4"
-time ./run tf64 -r 16777216 128
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 16 MiB, block count 128, file size 2 GiB, attempt 5"
-time ./run tf64 -r 16777216 128
-
-echo ""
-echo ""
-
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 64 MiB, block count 32, file size 2 GiB, attempt 1"
-time ./run tf64 -r 67108864 32
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 64 MiB, block count 32, file size 2 GiB, attempt 2"
-time ./run tf64 -r 67108864 32
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 64 MiB, block count 32, file size 2 GiB, attempt 3"
-time ./run tf64 -r 67108864 32
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 64 MiB, block count 32, file size 2 GiB, attempt 4"
-time ./run tf64 -r 67108864 32
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 64 MiB, block count 32, file size 2 GiB, attempt 5"
-time ./run tf64 -r 67108864 32
-
-echo ""
-echo ""
-
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 256 MiB, block count 8, file size 2 GiB, attempt 1"
-time ./run tf64 -r 268435456 8
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 256 MiB, block count 8, file size 2 GiB, attempt 2"
-time ./run tf64 -r 268435456 8
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 256 MiB, block count 8, file size 2 GiB, attempt 3"
-time ./run tf64 -r 268435456 8
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 256 MiB, block count 8, file size 2 GiB, attempt 4"
-time ./run tf64 -r 268435456 8
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 256 MiB, block count 8, file size 2 GiB, attempt 5"
-time ./run tf64 -r 268435456 8
-
-echo ""
-echo ""
-
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 1 GiB, block count 2, file size 2 GiB, attempt 1"
-time ./run tf64 -r 1073741824 2
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 1 GiB, block count 2, file size 2 GiB, attempt 2"
-time ./run tf64 -r 1073741824 2
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 1 GiB, block count 2, file size 2 GiB, attempt 3"
-time ./run tf64 -r 1073741824 2
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 1 GiB, block count 2, file size 2 GiB, attempt 4"
-time ./run tf64 -r 1073741824 2
-sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-echo "block size 1 GiB, block count 2, file size 2 GiB, attempt 5"
-time ./run tf64 -r 1073741824 2
+for i in {1..5}
+do
+    sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
+    echo "block size 1 GiB, block count 8, file size 8 GiB, attempt $i"
+    time ./run tf1024 -r 1073741824 8
+done
 
 rm tf1
 rm tf4
 rm tf16
 rm tf64
+rm tf256
+rm tf1024
