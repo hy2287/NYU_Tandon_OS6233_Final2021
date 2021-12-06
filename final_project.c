@@ -243,17 +243,7 @@ unsigned int optimizedRead2(char* filename, size_t blockSize) {
     return result;
 }
 
-/*double measureReadTime(char* filename, size_t blockSize){
-    clock_t start, end;
-    int fd = open(filename, O_RDONLY);
-    start = clock();
-    unsigned int xorAnswer = myRead(fd, blockSize);
-    end = clock();
-    double timeNeeded = ((double)(end-start) / (double)CLOCKS_PER_SEC);
-    close(fd);
-    printf("XOR Answer is %08x\n", xorAnswer);
-    return timeNeeded;
-}*/
+
 
 double measureOptimizedReadTime(char* filename, size_t blockSize, int readVersion){
     clock_t start, end;
@@ -275,30 +265,6 @@ double measureOptimizedReadTime(char* filename, size_t blockSize, int readVersio
     printf("XOR Answer is %u\n", xorAnswer);
     return timeNeeded;
 }
-
-/*unsigned long long findFileSize(size_t blockSize){                          // return reasonable fileSize (in bytes) to test with given blockSize
-    size_t blockCount = 1;
-    clock_t start, end;
-    double timeNeeded = 0;
-    char* filename = "tempFile";
-    int fd;
-
-    while (timeNeeded < 5) {        // increasing blockCount (fileSize) until it takes more than 5 sec to read
-        blockCount *= 2;
-        if (blockCount <= 0) {
-            printf("Overflow during findFileSize, blockCount: %lu\n",blockCount);
-            break;
-        }
-        fd = open(filename, O_WRONLY|O_CREAT|O_TRUNC, S_IRWXO|S_IRWXG|S_IRWXU);
-        myWrite(fd, blockSize, blockCount, 0);
-        close(fd);
-        timeNeeded = measureReadTime(filename, blockSize);
-    }
-    printf("Block Size: %lu, Block Count: %lu, Time Used to Read: %f sec\n", blockSize, blockCount, timeNeeded);
-    remove(filename);
-
-    return blockCount;
-}*/
 
 /*double getPerformance(char* filename, size_t blockSize, int readVersion){
     //return the MiB/s of the read operation by the specified block size
@@ -334,17 +300,7 @@ int main(int argc, char *argv[]) {
     int fd;
     char mode = 'x';
     size_t blockSize, blockCount;                           // deleted testBlockSize and use blockSize instead
-    //srand(time(0));
 
-
-    /*if (argc == 2) {                                        // print appropirate file size of given blockSize on stdout
-        if (sscanf(argv[1], "%lu", &blockSize) <= 0) {      // store stdin arg into blockSize
-            printf("Invalid arg provided.\n");
-        }
-        unsigned long long fileSize = findFileSize(blockSize) * blockSize;
-        unsigned long long fileSizeMiB = fileSize / 1048576;
-        printf("Input BlockSize: %lu, Reasonable FileSize: %llu bytes (%llu MiB)\n", blockSize, fileSize, fileSizeMiB);
-    }*/
     if (argc == 5) {                                   // normal mode - read or write
         sscanf(argv[2], "-%c", &mode);
         sscanf(argv[3], "%lu", &blockSize);
