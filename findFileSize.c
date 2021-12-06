@@ -4,17 +4,25 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sys/time.h>
 #include <sys/stat.h>
 #include <string.h>
 #include "readWrite.h"
 
 double measureReadTime(char* filename, size_t blockSize, size_t blockCount){
     int fd = open(filename, O_RDONLY);
-    time_t start = time(NULL);
+    struct timeval start;
+    gettimeofday(&start, NULL);
+    double startTime = (double) start.tv_sec + (double) start.tv_usec * 0.000001;
+
     myRead(fd, blockSize, blockCount);
-    double timeNeeded = (double) (time(NULL) - start);
+
+    struct timeval end;
+    gettimeofday(&end, NULL);
+    double endTime = (double) end.tv_sec + (double) end.tv_usec * 0.000001;
+
     close(fd);
-    return timeNeeded;
+    return endTime - startTime;
 }
 
 unsigned long long findFileSize(size_t blockSize){                          // return reasonable fileSize (in bytes) to test with given blockSize
@@ -41,8 +49,7 @@ unsigned long long findFileSize(size_t blockSize){                          // r
 }
 
 int main(int argc, char *argv[]) {
-    int fd;
-    size_t blockSize, blockCount;                           
+    size_t blockSize;                           
 
     if (argc == 2) {                                        
         if (sscanf(argv[1], "%lu", &blockSize) <= 0) {      
