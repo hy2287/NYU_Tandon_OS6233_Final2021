@@ -36,7 +36,7 @@ void* myReadmt(void* threadArgPtr) {
         blockCount--;
     }
     free(buffer);
-    pthread_exit((void*)XORresult);
+    pthread_exit((void*)(intptr_t)XORresult);
 }
 
 int main(int argc, char *argv[]) {
@@ -63,18 +63,16 @@ int main(int argc, char *argv[]) {
             jThArgs[i].blockCount = blockCountPerThread;
             jThArgs[i].offset = i * offset;
             pthread_create(&j_threads[i], NULL, myReadmt, (void*)&jThArgs[i]);
-            printf("thread %d is created, processing %lu blocks, and offset is %ld\n", i, jThArgs[i].blockCount, jThArgs[i].offset);
         }
         for (int i = 0; i < NUM_OF_THREADS; i++) {
             pthread_join(j_threads[i], (void**)&results[i]);
             finalResult ^= results[i];
-            printf("thread %d joined and thread XOR is %08x\n", i, results[i]);
         }
         free(j_threads);
         free(jThArgs);
         free(results);
         close(fd);
 
-        printf("final XOR is %08x\n", finalResult);
+        printf("XOR result is %08x\n", finalResult);
     }
 }
