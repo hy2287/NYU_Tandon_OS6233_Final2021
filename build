@@ -2,5 +2,6 @@
 
 gcc -pthread final_project.c readWrite.c -o run -Wall
 gcc -pthread fast.c -o fast
+gcc -pthread fast2.c -o fast2
 gcc findFileSize.c readWrite.c -o findFileSize -Wall
 gcc syscallPerformance.c readWrite.c -o syscallPerformance -Wall
