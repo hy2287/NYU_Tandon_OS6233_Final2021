@@ -9,8 +9,8 @@
 #include <pthread.h>
 #include <string.h>
 
-#define FAST_BLOCK_SIZE 512 //1048576
-int num_of_threads = 4;
+#define FAST_BLOCK_SIZE 65536
+#define NUM_OF_THREADS 64
 
 struct jThreadArgs {
     int fd;
@@ -44,8 +44,8 @@ int main(int argc, char *argv[]) {
         pthread_t* j_threads;
         struct stat fileStat;
 
-        j_threads = (pthread_t *) malloc(sizeof(pthread_t) * num_of_threads);
-        struct jThreadArgs* jThArgs = malloc(sizeof(struct jThreadArgs) * num_of_threads);
+        j_threads = (pthread_t *) malloc(sizeof(pthread_t) * NUM_OF_THREADS);
+        struct jThreadArgs* jThArgs = malloc(sizeof(struct jThreadArgs) * NUM_OF_THREADS);
         if (!j_threads) {
             printf("j_threads malloc failed\n");
             exit(1);
@@ -53,15 +53,19 @@ int main(int argc, char *argv[]) {
         int fd = open(argv[1], O_RDONLY);
         fstat(fd, &fileStat);
         unsigned int finalResult = 0;
-        unsigned int* results = (unsigned int*) malloc(sizeof(unsigned int) * num_of_threads);
-        for (int i = 0; i < num_of_threads; i++) {
+        unsigned int* results = (unsigned int*) malloc(sizeof(unsigned int) * NUM_OF_THREADS);
+
+        size_t blockCountPerThread = (fileStat.st_size / FAST_BLOCK_SIZE / NUM_OF_THREADS) + 1;
+        off_t offset = blockCountPerThread * FAST_BLOCK_SIZE;
+
+        for (int i = 0; i < NUM_OF_THREADS; i++) {
             jThArgs[i].fd = fd;
-            jThArgs[i].blockCount = fileStat.st_size / num_of_threads / FAST_BLOCK_SIZE;
-            jThArgs[i].offset = lseek(fd, i * fileStat.st_size / num_of_threads, SEEK_SET);
+            jThArgs[i].blockCount = blockCountPerThread;
+            jThArgs[i].offset = i * offset;
             pthread_create(&j_threads[i], NULL, myReadmt, (void*)&jThArgs[i]);
             printf("thread %d is created, processing %lu blocks, and offset is %ld\n", i, jThArgs[i].blockCount, jThArgs[i].offset);
         }
-        for (int i = 0; i < num_of_threads; i++) {
+        for (int i = 0; i < NUM_OF_THREADS; i++) {
             pthread_join(j_threads[i], (void**)&results[i]);
             finalResult ^= results[i];
             printf("thread %d joined and thread XOR is %08x\n", i, results[i]);
