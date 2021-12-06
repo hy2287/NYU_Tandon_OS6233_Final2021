@@ -1,3 +1,4 @@
 #!/bin/bash
 
 gcc -pthread final_project.c -o run
+gcc -pthread fast.c -o fast
