@@ -9,23 +9,23 @@
 #include <sys/mman.h>
 
 #define NUM_OF_THREADS 64
+#define MAP_HUGE_2MB (21 << MAP_HUGE_SHIFT)
+#define MAP_HUGE_1GB (30 << MAP_HUGE_SHIFT)
 
-struct jThreadArgs {
+struct threadArgs {
     unsigned int* begin;
     unsigned int* end;
     unsigned int* fileEndAddress;
 };
 
-void* myReadmt2(void* threadArgPtr) {
-    struct jThreadArgs* args = threadArgPtr;
+void* thrdRead(void* threadArgPtr) {
+    struct threadArgs* args = threadArgPtr;
     unsigned int* begin = args->begin;
-    if (begin >= args->fileEndAddress) {
-        unsigned int XORresult = 0;
-        //printf("thread exit early, thread begin is %p, fileEndAddress is %p\n", begin, args->fileEndAddress);
-        pthread_exit((void*)(intptr_t)XORresult);
-    }
     unsigned int* end = args->end;
     unsigned int XORresult = 0;
+    if (begin >= args->fileEndAddress) {
+        pthread_exit((void*)(intptr_t)XORresult);
+    }
     while (begin < end) {
         XORresult ^= *begin;
         begin++;
@@ -35,45 +35,60 @@ void* myReadmt2(void* threadArgPtr) {
 
 int main(int argc, char *argv[]) {
     if (argc == 2) {
-        pthread_t* j_threads;
+        pthread_t* mThreads;
         struct stat fileStat;
-        j_threads = (pthread_t *) malloc(sizeof(pthread_t) * NUM_OF_THREADS);
-        struct jThreadArgs* jThArgs = malloc(sizeof(struct jThreadArgs) * NUM_OF_THREADS);
+        unsigned int finalResult = 0;
+
+        mThreads = (pthread_t *) malloc(sizeof(pthread_t) * NUM_OF_THREADS);
+        if (!mThreads) {
+            printf("mThreads malloc failed!\n");
+            exit(1);
+        }
+        struct threadArgs* thrdArgs = (struct threadArgs*) malloc(sizeof(struct threadArgs) * NUM_OF_THREADS);
+        if (!thrdArgs) {
+            printf("thrdArgs malloc failed!\n");
+            exit(1);
+        }
+        unsigned int* thrdResults = (unsigned int*) malloc(sizeof(unsigned int) * NUM_OF_THREADS);
+        if (!thrdResults) {
+            printf("thrdResults malloc failed!\n");
+            exit(1);
+        }
 
         int fd = open(argv[1], O_RDONLY);
         fstat(fd, &fileStat);
-        unsigned int* fileInMem = mmap(NULL, fileStat.st_size, PROT_READ, MAP_SHARED, fd, 0);
         size_t intCount = fileStat.st_size / 4;
-        size_t intCountPerThread = intCount / 64 + 1;
-        //printf("fileInMem address is %p, fileEndAddress is %p\n", fileInMem, fileInMem + intCount);
-        //printf("intCount is %lu, and intCountPerTHread is %lu\n", intCount, intCountPerThread);
-        unsigned int finalResult = 0;
-        unsigned int* results = (unsigned int*) malloc(sizeof(unsigned int) * NUM_OF_THREADS);
+        size_t intCountPerThread = (intCount / NUM_OF_THREADS) + 1;
+        unsigned int* fileBegAdd = mmap(NULL, fileStat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+        unsigned int* fileEndAdd = fileBegAdd + intCount;
 
         for (int i = 0; i < NUM_OF_THREADS; i++) {
-            jThArgs[i].begin = fileInMem + (i * intCountPerThread);
-            jThArgs[i].end = fileInMem + (i + 1) * intCountPerThread;
-            jThArgs[i].fileEndAddress = fileInMem + intCount;
+            unsigned int* begin = fileBegAdd + (i * intCountPerThread);
+            thrdArgs[i].begin = begin;
+            thrdArgs[i].end = begin + intCountPerThread;
+            thrdArgs[i].fileEndAddress = fileEndAdd;
             if (i == NUM_OF_THREADS -1) {
-                jThArgs[i].end = fileInMem + intCount;
+                thrdArgs[i].end = fileEndAdd;
             }
-            pthread_create(&j_threads[i], NULL, myReadmt2, (void*)&jThArgs[i]);
-            //printf("thread %d created, begin is %p, and end is %p\n", i, jThArgs[i].begin, jThArgs[i].end);
+            pthread_create(&mThreads[i], NULL, thrdRead, (void*)&thrdArgs[i]);
         }
         for (int i = 0; i < NUM_OF_THREADS; i++) {
-            pthread_join(j_threads[i], (void**)&results[i]);
-            finalResult ^= results[i];
-            //printf("thread %d joined, XOR result is %08x\n", i, results[i]);
+            pthread_join(mThreads[i], (void**)&thrdResults[i]);
+            finalResult ^= thrdResults[i];
         }
 
-        free(j_threads);
-        free(jThArgs);
-        free(results);
-        if (munmap(fileInMem, fileStat.st_size) < 0)
-            printf("munmap failed.\n");
-        
-        printf("mmap XOR result is %08x\n", finalResult);
+        free(mThreads);
+        free(thrdArgs);
+        free(thrdResults);
+        if (munmap(fileBegAdd, fileStat.st_size) < 0) {
+            printf("munmap failed!\n");
+        }
         close(fd);
+        printf("mmap XOR result is %08x\n", finalResult);
+    }
+    else {
+        printf("Invalid Arguments. Please enter \"./fast2 <filename\" only.\n");
+        exit(1);
     }
     exit(0);
 }
