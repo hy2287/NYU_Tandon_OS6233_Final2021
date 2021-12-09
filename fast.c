@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
         printf("XOR result is %08x\n", finalResult);
     }
     else {
-        printf("Invalid Arguments. Please enter \"./fast <filename\" only.\n");
+        printf("Invalid Arguments. Please enter \"./fast <filename>\" only.\n");
         exit(1);
     }
     exit(0);
