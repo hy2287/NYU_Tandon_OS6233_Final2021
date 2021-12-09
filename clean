@@ -1,0 +1,7 @@
+#!/bin/bash
+
+rm run
+rm fast
+rm fast2
+rm findFileSize
+rm syscallPerformance

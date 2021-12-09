@@ -9,8 +9,6 @@
 #include <sys/mman.h>
 
 #define NUM_OF_THREADS 64
-#define MAP_HUGE_2MB (21 << MAP_HUGE_SHIFT)
-#define MAP_HUGE_1GB (30 << MAP_HUGE_SHIFT)
 
 struct threadArgs {
     unsigned int* begin;

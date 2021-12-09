@@ -9,6 +9,8 @@
 #include <string.h>
 #include "readWrite.h"
 
+#define BYTES_TO_MiB 1048576
+
 double measureReadTime(char* filename, size_t blockSize, size_t blockCount){
     int fd = open(filename, O_RDONLY);
     struct timeval start;
@@ -25,13 +27,13 @@ double measureReadTime(char* filename, size_t blockSize, size_t blockCount){
     return endTime - startTime;
 }
 
-unsigned long long findFileSize(size_t blockSize){                          // return reasonable fileSize (in bytes) to test with given blockSize
+unsigned long long findFileSize(size_t blockSize){
     size_t blockCount = 1;
     double timeNeeded = 0;
     char* filename = "tempFile";
     int fd;
 
-    while (timeNeeded < 5) {        // increasing blockCount (fileSize) until it takes more than 5 sec to read
+    while (timeNeeded < 5) {
         blockCount *= 2;
         if (blockCount <= 0) {
             printf("Overflow during findFileSize, blockCount: %lu\n",blockCount);
@@ -49,14 +51,14 @@ unsigned long long findFileSize(size_t blockSize){                          // r
 }
 
 int main(int argc, char *argv[]) {
-    size_t blockSize;                           
+    size_t blockSize;
 
-    if (argc == 2) {                                        
+    if (argc == 2) {
         if (sscanf(argv[1], "%lu", &blockSize) <= 0) {      
             printf("Invalid arg provided.\n");
         }
         unsigned long long fileSize = findFileSize(blockSize) * blockSize;
-        unsigned long long fileSizeMiB = fileSize / 1048576;
+        unsigned long long fileSizeMiB = fileSize / BYTES_TO_MiB;
         printf("Input BlockSize: %lu, Reasonable FileSize: %llu bytes (%llu MiB)\n", blockSize, fileSize, fileSizeMiB);
     }
     else {
